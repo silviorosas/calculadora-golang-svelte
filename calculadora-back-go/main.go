@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/rs/cors"
 )
@@ -18,6 +20,14 @@ type OperationResponse struct {
 	Result float64 `json:"result"`
 	Error  string  `json:"error,omitempty"`
 }
+
+type OperacionGuardada struct {
+	Operation string    `json:"operation"`
+	Result    float64   `json:"result"`
+	Date      time.Time `json:"date"`
+}
+
+var historialOperaciones []OperacionGuardada // Mover la variable fuera de la función main para que sea global
 
 func main() {
 	// Configuración de CORS
@@ -57,8 +67,25 @@ func main() {
 					response.Error = "Operador inválido: " + request.Operator
 				}
 
+				// Guardar la operación en el historial
+				if response.Error == "" {
+					operation := fmt.Sprintf("%.2f %s %.2f = %.2f", request.Number1, request.Operator, request.Number2, response.Result)
+					record := OperacionGuardada{Operation: operation, Result: response.Result, Date: time.Now()}
+					historialOperaciones = append(historialOperaciones, record)
+
+					// Imprimir operación guardada
+					fmt.Printf("Operación: %s - Resultado: %.2f - Fecha: %s\n", operation, response.Result, time.Now().Format("2006-01-02 15:04:05"))
+				}
+
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(response)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		case "/history":
+			if r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(historialOperaciones)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
