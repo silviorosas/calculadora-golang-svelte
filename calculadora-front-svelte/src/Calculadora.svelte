@@ -129,12 +129,9 @@
       
     </div>
   </div>
+  <p>*Para ver el historial de operaciores y resultados da click en el boton m</p>
   
-  
-  
-  
-  
-  
+   
   
   <style>
     /* Estilos CSS para la calculadora */
